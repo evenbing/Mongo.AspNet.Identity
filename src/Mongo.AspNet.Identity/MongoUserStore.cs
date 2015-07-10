@@ -23,27 +23,44 @@ namespace Mongo.AspNet.Identity
     using System.Configuration;
     using System.Diagnostics.Contracts;
     using System.Reflection;
+    using System.Threading;
 
     public partial class MongoUserStore<TUser>
         where TUser : class, IUser, IIdentityUser
     {
+        private readonly AutoResetEvent _configEvent = new AutoResetEvent(true);
         private readonly MongoClient _client;
         private readonly Action<BsonClassMap<TUser>> _genericUserMapper;
 
         private const string RequiredSettingFormat = "'{0}' setting is missing or empty in current application configuration";
 
-        public MongoUserStore(MongoClient client, Action<BsonClassMap<TUser>> genericUserMapper)
+        public MongoUserStore(MongoClient client, Action<BsonClassMap<TUser>> genericUserMapper = null)
         {
             Contract.Assert(!string.IsNullOrEmpty(DatabaseName), string.Format(RequiredSettingFormat, "mongo:aspnetidentity:databaseName"));
 
             _genericUserMapper = genericUserMapper;
             _client = client;
 
-            CreateClassMaps();
+            _configEvent.WaitOne();
+
+            try
+            {
+                if (!AlreadyConfigured)
+                {
+                    CreateClassMaps();
+
+                    AlreadyConfigured = true;
+                }
+            }
+            finally
+            {
+                _configEvent.Set();
+            }
         }
 
         private MongoClient Client { get { return _client; } }
         public string DatabaseName { get { return ConfigurationManager.AppSettings["mongo:aspnetidentity:databaseName"]; } }
+        private static bool AlreadyConfigured { get; set; }
 
         private IMongoCollection<TDocument> GetCollection<TDocument>(string name)
         {
@@ -52,49 +69,18 @@ namespace Mongo.AspNet.Identity
 
         private void CreateClassMaps()
         {
-            BsonClassMap.RegisterClassMap<IUser>
-            (
-                map =>
-                {
-                    map.SetIsRootClass(true);
-                    map.AddKnownType(typeof(IIdentityUser));
-                    map.AddKnownType(typeof(TUser));
-                    map.AddKnownType(typeof(ExtendedUser));
-
-                    map.MapMember(user => user.Id).SetElementName("id");
-                    map.MapMember(user => user.UserName).SetElementName("name");
-                }
-            );
-
-            BsonClassMap.RegisterClassMap<IIdentityUser>
-            (
-                map =>
-                {
-                    map.AddKnownType(typeof(IUser));
-                    map.AddKnownType(typeof(TUser));
-                    map.AddKnownType(typeof(ExtendedUser));
-
-                    map.MapMember(user => user.Id).SetElementName("id");
-                    map.MapMember(user => user.Email).SetElementName("email");
-                    map.MapMember(user => user.PasswordHash).SetElementName("passwordHash");
-                    map.MapMember(user => user.PhoneNumber).SetElementName("phoneNumber");
-                    map.MapMember(user => user.SecurityStamp).SetElementName("securityStamp");
-                }
-            );
-
             BsonClassMap<TUser> genericUserMap = BsonClassMap.RegisterClassMap<TUser>
             (
                 map =>
                 {
-                    map.AddKnownType(typeof(IUser));
-                    map.AddKnownType(typeof(IIdentityUser));
-                    map.AddKnownType(typeof(ExtendedUser));
-
-                    map.MapMember(typeof(TUser).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance)).SetElementName("id");
+                    map.MapMember(user => ((IUser)user).Id).SetElementName("id");
+                    map.MapMember(user => user.UserName).SetElementName("userName");
                     map.MapMember(user => user.Email).SetElementName("email");
                     map.MapMember(user => user.PasswordHash).SetElementName("passwordHash");
                     map.MapMember(user => user.PhoneNumber).SetElementName("phoneNumber");
                     map.MapMember(user => user.SecurityStamp).SetElementName("securityStamp");
+
+                    map.SetDiscriminator("type");
 
                     if (_genericUserMapper != null)
                         _genericUserMapper(map);
@@ -105,10 +91,6 @@ namespace Mongo.AspNet.Identity
             (
                 map =>
                 {
-                    map.AddKnownType(typeof(IUser));
-                    map.AddKnownType(typeof(IIdentityUser));
-                    map.AddKnownType(typeof(TUser));
-
                     map.MapMember(user => user.Id).SetElementName("id");
                     map.MapMember(user => user.PhoneNumberConfirmed).SetElementName("phoneNumberConfirmed");
                     map.MapMember(user => user.TwoFactorAuthenticationEnabled).SetElementName("twoFactorAuthenticationEnabled");
