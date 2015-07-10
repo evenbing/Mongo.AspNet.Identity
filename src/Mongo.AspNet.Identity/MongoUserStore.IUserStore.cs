@@ -74,7 +74,7 @@ namespace Mongo.AspNet.Identity
             IMongoCollection<TUser> userCollection = GetCollection<TUser>(UserCollectionName);
 
             return userCollection.Find(Builders<TUser>.Filter.Eq(someUser => someUser.UserName, userName))
-                        .SingleAsync();
+                                    .SingleOrDefaultAsync();
         }
 
         public Task UpdateAsync(TUser user)

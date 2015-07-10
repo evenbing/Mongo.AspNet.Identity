@@ -26,7 +26,7 @@ namespace Mongo.AspNet.Identity
         {
             IMongoCollection<TUser> userCollection = GetCollection<TUser>(UserCollectionName);
 
-            return userCollection.Find(Builders<TUser>.Filter.Eq(user => user.Email, email)).SingleAsync();
+            return userCollection.Find(Builders<TUser>.Filter.Eq(user => user.Email, email)).SingleOrDefaultAsync();
         }
 
         public Task<string> GetEmailAsync(TUser user)
