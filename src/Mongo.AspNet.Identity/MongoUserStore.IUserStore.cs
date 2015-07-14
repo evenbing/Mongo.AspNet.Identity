@@ -26,7 +26,7 @@ namespace Mongo.AspNet.Identity
 
     public partial class MongoUserStore<TUser> : IUserStore<TUser>
     {
-        private readonly Expression<Func<TUser, string>> userIdPropertySelector = someUser => ((IIdentityUser)someUser).Id;
+        private readonly Expression<Func<TUser, string>> userIdPropertySelector = someUser => someUser.Id;
 
         public MongoUserStore()
         {
@@ -46,7 +46,7 @@ namespace Mongo.AspNet.Identity
         {
             IMongoCollection<TUser> userCollection = GetCollection<TUser>(UserCollectionName);
 
-            return userCollection.DeleteOneAsync(Builders<TUser>.Filter.Eq(userIdPropertySelector, ((IIdentityUser)user).Id));
+            return userCollection.DeleteOneAsync(Builders<TUser>.Filter.Eq(userIdPropertySelector, ((IIdentityUser)user).UserId));
         }
 
         public Task<TUser> FindByIdAsync(string userId)
@@ -83,7 +83,7 @@ namespace Mongo.AspNet.Identity
 
             return userCollection.ReplaceOneAsync
             (
-                Builders<TUser>.Filter.Eq(userIdPropertySelector, ((IIdentityUser)user).Id),
+                Builders<TUser>.Filter.Eq(userIdPropertySelector, ((IIdentityUser)user).UserId),
                 user
             );
         }

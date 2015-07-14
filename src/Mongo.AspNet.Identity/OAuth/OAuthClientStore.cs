@@ -1,6 +1,8 @@
 ﻿namespace Mongo.AspNet.Identity.OAuth
 {
     using Microsoft.AspNet.Identity;
+    using Microsoft.AspNet.Identity.Owin;
+    using Microsoft.Owin;
     using MongoDB.Driver;
     using System;
     using System.Collections.Immutable;

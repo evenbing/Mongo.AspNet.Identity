@@ -25,7 +25,6 @@ namespace Mongo.AspNet.Identity
 
     public partial class MongoUserStore<TUser> : IUserClaimStore<TUser>
     {
-
         public async Task AddClaimAsync(TUser user, Claim claim)
         {
             ExtendedUser extendedUser = await FindExtendedUserByIdAsync(((IUser)user).Id);
@@ -44,7 +43,10 @@ namespace Mongo.AspNet.Identity
 
         public async Task<IList<Claim>> GetClaimsAsync(TUser user)
         {
-            return (await FindExtendedUserByIdAsync(((IUser)user).Id, p => p.Project(extUser => extUser.Claims))).Claims.ToList();
+            HashSet<Claim> claims = (await FindExtendedUserByIdAsync(((IUser)user).Id, p => p.Project(extUser => extUser.Claims))).Claims;
+
+            if (claims != null) return claims.ToList();
+            else return new List<Claim>();
         }
 
         public async Task RemoveClaimAsync(TUser user, Claim claim)

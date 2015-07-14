@@ -28,7 +28,9 @@ namespace Mongo.AspNet.Identity
             UserName = userName;
         }
 
+
         public virtual string Id { get; set; }
+        public virtual string UserId { get; set; }
         public virtual string UserName { get; set; }
 
         public virtual string Email

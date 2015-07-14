@@ -22,7 +22,6 @@ namespace Mongo.AspNet.Identity
     using System;
     using System.Configuration;
     using System.Diagnostics.Contracts;
-    using System.Reflection;
     using System.Threading;
 
     public partial class MongoUserStore<TUser>
@@ -30,15 +29,12 @@ namespace Mongo.AspNet.Identity
     {
         private readonly AutoResetEvent _configEvent = new AutoResetEvent(true);
         private readonly MongoClient _client;
-        private readonly Action<BsonClassMap<TUser>> _genericUserMapper;
 
         private const string RequiredSettingFormat = "'{0}' setting is missing or empty in current application configuration";
 
         public MongoUserStore(MongoClient client, Action<BsonClassMap<TUser>> genericUserMapper = null)
         {
             Contract.Assert(!string.IsNullOrEmpty(DatabaseName), string.Format(RequiredSettingFormat, "mongo:aspnetidentity:databaseName"));
-
-            _genericUserMapper = genericUserMapper;
             _client = client;
 
             _configEvent.WaitOne();
@@ -67,13 +63,13 @@ namespace Mongo.AspNet.Identity
             return Client.GetDatabase(DatabaseName).GetCollection<TDocument>(name);
         }
 
-        private void CreateClassMaps()
+        protected virtual void CreateClassMaps()
         {
-            BsonClassMap<TUser> genericUserMap = BsonClassMap.RegisterClassMap<TUser>
+            BsonClassMap<IdentityUser> genericUserMap = BsonClassMap.RegisterClassMap<IdentityUser>
             (
                 map =>
                 {
-                    map.MapMember(user => ((IUser)user).Id).SetElementName("id");
+                    map.MapMember(user => user.Id).SetElementName("id");
                     map.MapMember(user => user.UserName).SetElementName("userName");
                     map.MapMember(user => user.Email).SetElementName("email");
                     map.MapMember(user => user.PasswordHash).SetElementName("passwordHash");
@@ -81,9 +77,6 @@ namespace Mongo.AspNet.Identity
                     map.MapMember(user => user.SecurityStamp).SetElementName("securityStamp");
 
                     map.SetDiscriminator("type");
-
-                    if (_genericUserMapper != null)
-                        _genericUserMapper(map);
                 }
             );
 

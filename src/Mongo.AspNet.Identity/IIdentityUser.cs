@@ -18,7 +18,7 @@ namespace Mongo.AspNet.Identity
 {
     public interface IIdentityUser
     {
-        string Id { get; set; }
+        string UserId { get; set; }
         string Email { get; set; }
         string PhoneNumber { get; set; }
         string PasswordHash { get; set; }
