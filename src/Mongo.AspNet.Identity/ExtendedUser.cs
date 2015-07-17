@@ -17,27 +17,45 @@
 namespace Mongo.AspNet.Identity
 {
     using Microsoft.AspNet.Identity;
+    using MongoDB.Bson.Serialization.Attributes;
     using System;
     using System.Collections.Generic;
     using System.Security.Claims;
 
-    public sealed class ExtendedUser
+    [BsonIgnoreExtraElements]
+    public sealed class ExtenderUser<TUserId>
+        where TUserId : IEquatable<TUserId>
     {
-        public ExtendedUser()
+        public ExtenderUser()
         {
             Roles = new HashSet<string>();
             Logins = new HashSet<UserLoginInfo>();
         }
 
-        public string Id { get; set; }
+        [BsonElement("id"), BsonRequired]
+        public TUserId Id { get; set; }
+
+        [BsonIgnoreIfNull]
         public HashSet<string> Roles { get; set; }
+
         public bool PhoneNumberConfirmed { get; set; }
+
         public bool EmailConfirmed { get; set; }
+
         public bool TwoFactorAuthenticationEnabled { get; set; }
+
+        [BsonIgnoreIfDefault]
         public int AccessFailedCount { get; set; }
+
         public bool LockoutEnabled { get; set; }
+
+        [BsonIgnoreIfDefault]
         public DateTimeOffset LockoutEndDate { get; set; }
+
+        [BsonIgnoreIfNull]
         public HashSet<UserLoginInfo> Logins { get; set; }
+
+        [BsonIgnoreIfNull]
         public HashSet<Claim> Claims { get; set; }
     }
 }

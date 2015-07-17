@@ -22,21 +22,21 @@ namespace Mongo.AspNet.Identity
     using System.Linq;
     using System.Threading.Tasks;
 
-    public partial class MongoUserStore<TUser> : IUserLoginStore<TUser, string>
+    public abstract partial class MongoUserStore<TUserId, TUser> : IUserLoginStore<TUser, string>
     {
         public async Task AddLoginAsync(TUser user, UserLoginInfo login)
         {
-            IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
-            ExtendedUser userRoleHolder = await userCollection
-                                                    .Find(Builders<ExtendedUser>.Filter.Eq(holder => holder.Id, ((IUser)user).Id))
+            ExtenderUser<TUserId> userRoleHolder = await userCollection
+                                                    .Find(Builders<ExtenderUser<TUserId>>.Filter.Eq(holder => holder.Id, ((IIdentityUser<TUserId>)user).Id))
                                                     .SingleAsync();
             if (userRoleHolder.Logins.Add(login))
             {
                 await userCollection.UpdateOneAsync
                 (
-                    Builders<ExtendedUser>.Filter.Eq(holder => holder.Id, ((IUser)user).Id),
-                    Builders<ExtendedUser>.Update.Set(holder => holder.Logins, userRoleHolder.Logins),
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq(holder => holder.Id,((IIdentityUser<TUserId>)user).Id),
+                    Builders<ExtenderUser<TUserId>>.Update.Set(holder => holder.Logins, userRoleHolder.Logins),
                     new UpdateOptions { IsUpsert = true }
                 );
             }
@@ -59,9 +59,9 @@ namespace Mongo.AspNet.Identity
 
         public async Task<IList<UserLoginInfo>> GetLoginsAsync(TUser user)
         {
-            ExtendedUser extendedUser = await FindExtendedUserByIdAsync
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync
             (
-                ((IUser)user).Id,
+                ((IIdentityUser<TUserId>)user).Id,
                 find =>
                 {
                     find.Project(extUser => extUser.Logins);
@@ -73,9 +73,9 @@ namespace Mongo.AspNet.Identity
 
         public async Task RemoveLoginAsync(TUser user, UserLoginInfo login)
         {
-            string userId = ((IUser)user).Id;
+            TUserId userId = ((IIdentityUser<TUserId>)user).Id;
 
-            ExtendedUser extendedUser = await FindExtendedUserByIdAsync
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync
             (
                 userId,
                 find =>
@@ -86,12 +86,12 @@ namespace Mongo.AspNet.Identity
 
             if(extendedUser.Logins.Remove(login))
             {
-                IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+                IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
                 await userCollection.UpdateOneAsync
                 (
-                    Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, userId),
-                    Builders<ExtendedUser>.Update.Set(extUser => extUser.Logins, extendedUser.Logins)
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, userId),
+                    Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.Logins, extendedUser.Logins)
                 );
             }
         }

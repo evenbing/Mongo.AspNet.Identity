@@ -19,7 +19,7 @@ namespace Mongo.AspNet.Identity
     using Microsoft.AspNet.Identity;
     using System.Threading.Tasks;
 
-    public partial class MongoUserStore<TUser> : IUserSecurityStampStore<TUser>
+    public abstract partial class MongoUserStore<TUserId, TUser> : IUserSecurityStampStore<TUser>
     {
         public Task<string> GetSecurityStampAsync(TUser user)
         {

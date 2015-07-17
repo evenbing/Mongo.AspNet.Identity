@@ -17,8 +17,11 @@
 namespace Mongo.AspNet.Identity
 {
     using Microsoft.AspNet.Identity;
+    using MongoDB.Bson.Serialization.Attributes;
+    using System;
 
-    public class IdentityUser : IUser, IIdentityUser
+    public class IdentityUser<TId> : IUser, IIdentityUser<TId>
+        where TId : IEquatable<TId>
     {
         public IdentityUser() { }
 
@@ -28,18 +31,33 @@ namespace Mongo.AspNet.Identity
             UserName = userName;
         }
 
+        string IUser<string>.Id { get { return IdToString(); } }
 
-        public virtual string Id { get; set; }
-        public virtual string UserId { get; set; }
+        [BsonRequired]
+        public virtual TId Id { get; set; }
+
+        [BsonRequired]
         public virtual string UserName { get; set; }
 
+        [BsonRequired]
         public virtual string Email
         {
             get { return UserName; }
             set { UserName = value; }
         }
+
+        [BsonIgnoreIfNull]
         public virtual string PhoneNumber { get; set; }
+
+        [BsonRequired]
         public virtual string PasswordHash { get; set; }
+
+        [BsonRequired]
         public virtual string SecurityStamp { get; set; }
+
+        public virtual string IdToString()
+        {
+            return Id.ToString();
+        }
     }
 }

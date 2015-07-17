@@ -16,9 +16,12 @@
 
 namespace Mongo.AspNet.Identity
 {
-    public interface IIdentityUser
+    using System;
+
+    public interface IIdentityUser<TId>
+        where TId : IEquatable<TId>
     {
-        string UserId { get; set; }
+        TId Id { get; set; }
         string Email { get; set; }
         string PhoneNumber { get; set; }
         string PasswordHash { get; set; }

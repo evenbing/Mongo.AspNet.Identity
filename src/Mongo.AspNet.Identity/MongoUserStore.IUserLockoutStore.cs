@@ -21,41 +21,41 @@ namespace Mongo.AspNet.Identity
     using System;
     using System.Threading.Tasks;
 
-    public partial class MongoUserStore<TUser> : IUserLockoutStore<TUser, string>
+    public abstract partial class MongoUserStore<TUserId, TUser> : IUserLockoutStore<TUser, string>
     {
         public async Task<int> GetAccessFailedCountAsync(TUser user)
         {
-            ExtendedUser extendedUser = await FindExtendedUserByIdAsync(((IUser)user).Id);
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, f => f.Project(u => u.AccessFailedCount));
 
             return extendedUser.AccessFailedCount;
         }
 
         public async Task<bool> GetLockoutEnabledAsync(TUser user)
         {
-            ExtendedUser extendedUser = await FindExtendedUserByIdAsync(((IUser)user).Id);
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, f => f.Project(u => u.LockoutEnabled));
 
             return extendedUser.LockoutEnabled;
         }
 
         public async Task<DateTimeOffset> GetLockoutEndDateAsync(TUser user)
         {
-            ExtendedUser extendedUser = await FindExtendedUserByIdAsync(((IUser)user).Id);
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, f => f.Project(u => u.LockoutEndDate));
 
             return extendedUser.LockoutEndDate;
         }
 
         public async Task<int> IncrementAccessFailedCountAsync(TUser user)
         {
-            ExtendedUser extendedUser = await FindExtendedUserByIdAsync(((IUser)user).Id);
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, f => f.Project(u => u.AccessFailedCount));
 
             extendedUser.AccessFailedCount++;
 
-            IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
             await userCollection.UpdateOneAsync
             (
-                Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, ((IUser)user).Id),
-                Builders<ExtendedUser>.Update.Set(extUser => extUser.AccessFailedCount, extendedUser.AccessFailedCount)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.AccessFailedCount, extendedUser.AccessFailedCount)
             );
 
             return extendedUser.AccessFailedCount;
@@ -63,34 +63,34 @@ namespace Mongo.AspNet.Identity
 
         public Task ResetAccessFailedCountAsync(TUser user)
         {
-            IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
             return userCollection.UpdateOneAsync
             (
-                Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, ((IUser)user).Id),
-                Builders<ExtendedUser>.Update.Set(extUser => extUser.AccessFailedCount, 0)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.AccessFailedCount, 0)
             );
         }
 
         public Task SetLockoutEnabledAsync(TUser user, bool enabled)
         {
-            IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
             return userCollection.UpdateOneAsync
             (
-                Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, ((IUser)user).Id),
-                Builders<ExtendedUser>.Update.Set(extUser => extUser.LockoutEnabled, enabled)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.LockoutEnabled, enabled)
             );
         }
 
         public Task SetLockoutEndDateAsync(TUser user, DateTimeOffset lockoutEnd)
         {
-            IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
             return userCollection.UpdateOneAsync
             (
-                Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, ((IUser)user).Id),
-                Builders<ExtendedUser>.Update.Set(extUser => extUser.LockoutEndDate, lockoutEnd)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.LockoutEndDate, lockoutEnd)
             );
         }
     }

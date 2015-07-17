@@ -24,8 +24,9 @@ namespace Mongo.AspNet.Identity
     using System.Diagnostics.Contracts;
     using System.Threading;
 
-    public partial class MongoUserStore<TUser>
-        where TUser : class, IUser, IIdentityUser
+    public abstract partial class MongoUserStore<TUserId, TUser>
+        where TUserId : IEquatable<TUserId>
+        where TUser : class, IUser, IIdentityUser<TUserId>
     {
         private readonly AutoResetEvent _configEvent = new AutoResetEvent(true);
         private readonly MongoClient _client;
@@ -36,22 +37,6 @@ namespace Mongo.AspNet.Identity
         {
             Contract.Assert(!string.IsNullOrEmpty(DatabaseName), string.Format(RequiredSettingFormat, "mongo:aspnetidentity:databaseName"));
             _client = client;
-
-            _configEvent.WaitOne();
-
-            try
-            {
-                if (!AlreadyConfigured)
-                {
-                    CreateClassMaps();
-
-                    AlreadyConfigured = true;
-                }
-            }
-            finally
-            {
-                _configEvent.Set();
-            }
         }
 
         private MongoClient Client { get { return _client; } }
@@ -63,43 +48,6 @@ namespace Mongo.AspNet.Identity
             return Client.GetDatabase(DatabaseName).GetCollection<TDocument>(name);
         }
 
-        protected virtual void CreateClassMaps()
-        {
-            BsonClassMap<IdentityUser> genericUserMap = BsonClassMap.RegisterClassMap<IdentityUser>
-            (
-                map =>
-                {
-                    map.MapMember(user => user.Id).SetElementName("id");
-                    map.MapMember(user => user.UserName).SetElementName("userName");
-                    map.MapMember(user => user.Email).SetElementName("email");
-                    map.MapMember(user => user.PasswordHash).SetElementName("passwordHash");
-                    map.MapMember(user => user.PhoneNumber).SetElementName("phoneNumber");
-                    map.MapMember(user => user.SecurityStamp).SetElementName("securityStamp");
-
-                    map.SetDiscriminator("type");
-                }
-            );
-
-            BsonClassMap.RegisterClassMap<ExtendedUser>
-            (
-                map =>
-                {
-                    map.MapMember(user => user.Id).SetElementName("id");
-                    map.MapMember(user => user.PhoneNumberConfirmed).SetElementName("phoneNumberConfirmed");
-                    map.MapMember(user => user.TwoFactorAuthenticationEnabled).SetElementName("twoFactorAuthenticationEnabled");
-                    map.MapMember(user => user.Roles).SetElementName("roles");
-                    map.MapMember(user => user.Logins).SetElementName("logins");
-                }
-            );
-
-            BsonClassMap.RegisterClassMap<UserLoginInfo>
-            (
-                map =>
-                {
-                    map.MapMember(user => user.LoginProvider).SetElementName("provider");
-                    map.MapMember(user => user.ProviderKey).SetElementName("key");
-                }
-            );
-        }
+        protected abstract TUserId ConvertUserIdFromString(string userId);
     }
 }

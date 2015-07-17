@@ -20,7 +20,7 @@ namespace Mongo.AspNet.Identity
     using MongoDB.Driver;
     using System.Threading.Tasks;
 
-    public partial class MongoUserStore<TUser> : IUserPhoneNumberStore<TUser>
+    public abstract partial class MongoUserStore<TUserId, TUser> : IUserPhoneNumberStore<TUser>
     {
         public Task<string> GetPhoneNumberAsync(TUser user)
         {
@@ -29,9 +29,9 @@ namespace Mongo.AspNet.Identity
 
         public async Task<bool> GetPhoneNumberConfirmedAsync(TUser user)
         {
-            IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
-            ExtendedUser extendedUser = await userCollection.Find(Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, ((IUser)user).Id))
+            ExtenderUser<TUserId> extendedUser = await userCollection.Find(Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id))
                                                     .SingleAsync();
 
             return extendedUser.PhoneNumberConfirmed;
@@ -43,19 +43,19 @@ namespace Mongo.AspNet.Identity
 
             return userCollection.UpdateOneAsync
             (
-                Builders<TUser>.Filter.Eq(this.userIdPropertySelector, ((IUser)user).Id),
+                Builders<TUser>.Filter.Eq(this.userIdPropertySelector, ((IIdentityUser<TUserId>)user).Id),
                 Builders<TUser>.Update.Set(someUser => someUser.PhoneNumber, phoneNumber)
             );
         }
 
         public Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed)
         {
-            IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
             return userCollection.UpdateOneAsync
             (
-                Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, ((IUser)user).Id),
-                Builders<ExtendedUser>.Update.Set(extUser => extUser.PhoneNumberConfirmed, confirmed)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.PhoneNumberConfirmed, confirmed)
             );
         }
     }

@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mongo.AspNet.Identity", "Mongo.AspNet.Identity\Mongo.AspNet.Identity.csproj", "{383D5587-C43A-4BAE-99DA-51614B20171B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mongo.AspNet.Identity.Test", "Mongo.AspNet.Identity.Test\Mongo.AspNet.Identity.Test.csproj", "{6BC6965D-82D4-42F7-9ED1-E22D56E4D092}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{383D5587-C43A-4BAE-99DA-51614B20171B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{383D5587-C43A-4BAE-99DA-51614B20171B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{383D5587-C43A-4BAE-99DA-51614B20171B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BC6965D-82D4-42F7-9ED1-E22D56E4D092}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BC6965D-82D4-42F7-9ED1-E22D56E4D092}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BC6965D-82D4-42F7-9ED1-E22D56E4D092}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BC6965D-82D4-42F7-9ED1-E22D56E4D092}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -19,7 +19,7 @@ namespace Mongo.AspNet.Identity
     using Microsoft.AspNet.Identity;
     using System.Threading.Tasks;
 
-    public partial class MongoUserStore<TUser> : IUserPasswordStore<TUser>
+    public abstract partial class MongoUserStore<TUserId, TUser> : IUserPasswordStore<TUser>
     {
         public Task<string> GetPasswordHashAsync(TUser user)
         {

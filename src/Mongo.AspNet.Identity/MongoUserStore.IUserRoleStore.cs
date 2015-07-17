@@ -22,21 +22,19 @@ namespace Mongo.AspNet.Identity
     using System.Linq;
     using System.Threading.Tasks;
 
-    public partial class MongoUserStore<TUser> : IUserRoleStore<TUser>
+    public abstract partial class MongoUserStore<TUserId, TUser> : IUserRoleStore<TUser>
     {
         public async Task AddToRoleAsync(TUser user, string roleName)
         {
-            IMongoCollection<ExtendedUser> userRoleCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userRoleCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
+            ExtenderUser<TUserId> userRoleHolder = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, f => f.Project(u => u.Roles));
 
-            ExtendedUser userRoleHolder = await userRoleCollection
-                                                    .Find(Builders<ExtendedUser>.Filter.Eq(holder => holder.Id, ((IUser)user).Id))
-                                                    .SingleAsync();
             if (userRoleHolder.Roles.Add(roleName))
             {
                 await userRoleCollection.UpdateOneAsync
                 (
-                    Builders<ExtendedUser>.Filter.Eq(holder => holder.Id, ((IUser)user).Id),
-                    Builders<ExtendedUser>.Update.Set(holder => holder.Roles, userRoleHolder.Roles),
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq(holder => holder.Id, ((IIdentityUser<TUserId>)user).Id),
+                    Builders<ExtenderUser<TUserId>>.Update.Set(holder => holder.Roles, userRoleHolder.Roles),
                     new UpdateOptions { IsUpsert = true }
                 );
             }
@@ -44,43 +42,38 @@ namespace Mongo.AspNet.Identity
 
         public async Task<IList<string>> GetRolesAsync(TUser user)
         {
-            IMongoCollection<ExtendedUser> userRoleCollection = GetCollection<ExtendedUser>(UserCollectionName);
-            ExtendedUser userRoleHolder = await userRoleCollection
-                                                    .Find(Builders<ExtendedUser>.Filter.Eq(holder => holder.Id, ((IUser)user).Id))
-                                                    .SingleOrDefaultAsync();
+            IMongoCollection<ExtenderUser<TUserId>> userRoleCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
+            ExtenderUser<TUserId> userRoleHolder = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, f => f.Project(u => u.Roles));
 
-            return userRoleHolder.Roles.ToList();
+            return userRoleHolder.Roles != null ? userRoleHolder.Roles.ToList() : new List<string>();
         }
 
         public async Task<bool> IsInRoleAsync(TUser user, string roleName)
         {
-            IMongoCollection<ExtendedUser> userRoleCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userRoleCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
             return await userRoleCollection
                     .Find
                     (
-                        Builders<ExtendedUser>.Filter.And
+                        Builders<ExtenderUser<TUserId>>.Filter.And
                         (
-                            Builders<ExtendedUser>.Filter.Eq(holder => holder.Id, ((IUser)user).Id),
-                            Builders<ExtendedUser>.Filter.ElemMatch(holder => holder.Roles, role => role == roleName)
+                            Builders<ExtenderUser<TUserId>>.Filter.Eq(holder => holder.Id, ((IIdentityUser<TUserId>)user).Id),
+                            Builders<ExtenderUser<TUserId>>.Filter.ElemMatch(holder => holder.Roles, role => role == roleName)
                         )
-                    ).SingleOrDefaultAsync() != null;
+                    ).CountAsync() > 0;
         }
 
         public async Task RemoveFromRoleAsync(TUser user, string roleName)
         {
-            IMongoCollection<ExtendedUser> userRoleCollection = GetCollection<ExtendedUser>(UserCollectionName);
-
-            ExtendedUser userRoleHolder = await userRoleCollection
-                                                    .Find(Builders<ExtendedUser>.Filter.Eq(holder => holder.Id, ((IUser)user).Id))
-                                                    .SingleOrDefaultAsync();
+            IMongoCollection<ExtenderUser<TUserId>> userRoleCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
+            ExtenderUser<TUserId> userRoleHolder = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, f => f.Project(u => u.Roles));
 
             if (userRoleHolder.Roles.Remove(roleName))
             {
                 await userRoleCollection.UpdateOneAsync
                 (
-                    Builders<ExtendedUser>.Filter.Eq(holder => holder.Id, ((IUser)user).Id),
-                    Builders<ExtendedUser>.Update.Set(holder => holder.Roles, userRoleHolder.Roles),
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq(holder => holder.Id, ((IIdentityUser<TUserId>)user).Id),
+                    Builders<ExtenderUser<TUserId>>.Update.Set(holder => holder.Roles, userRoleHolder.Roles),
                     new UpdateOptions { IsUpsert = true }
                 );
             }

@@ -20,7 +20,7 @@ namespace Mongo.AspNet.Identity
     using MongoDB.Driver;
     using System.Threading.Tasks;
 
-    public partial class MongoUserStore<TUser> : IUserEmailStore<TUser>
+    public abstract partial class MongoUserStore<TUserId, TUser> : IUserEmailStore<TUser>
     {
         public Task<TUser> FindByEmailAsync(string email)
         {
@@ -36,7 +36,7 @@ namespace Mongo.AspNet.Identity
 
         public async Task<bool> GetEmailConfirmedAsync(TUser user)
         {
-            ExtendedUser extendedUser = await FindExtendedUserByIdAsync(((IUser)user).Id, p => p.Project(extUser => extUser.EmailConfirmed));
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, p => p.Project(extUser => extUser.EmailConfirmed));
 
             return extendedUser.EmailConfirmed;
         }
@@ -50,12 +50,12 @@ namespace Mongo.AspNet.Identity
 
         public Task SetEmailConfirmedAsync(TUser user, bool confirmed)
         {
-            IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+            IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
             return userCollection.UpdateOneAsync
-            (   
-                Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, ((IUser)user).Id),
-                Builders<ExtendedUser>.Update.Set(extUser => extUser.EmailConfirmed, confirmed)
+            (
+                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.EmailConfirmed, confirmed)
             );
         }
     }

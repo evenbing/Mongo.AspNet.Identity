@@ -23,27 +23,27 @@ namespace Mongo.AspNet.Identity
     using System.Security.Claims;
     using System.Threading.Tasks;
 
-    public partial class MongoUserStore<TUser> : IUserClaimStore<TUser>
+    public abstract partial class MongoUserStore<TUserId, TUser> : IUserClaimStore<TUser>
     {
         public async Task AddClaimAsync(TUser user, Claim claim)
         {
-            ExtendedUser extendedUser = await FindExtendedUserByIdAsync(((IUser)user).Id);
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, f => f.Project(u => u.Claims));
 
             if (extendedUser.Claims.Add(claim))
             {
-                IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+                IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
-                userCollection.UpdateOneAsync
+                await userCollection.UpdateOneAsync
                 (
-                    Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, ((IUser)user).Id),
-                    Builders<ExtendedUser>.Update.Set(extUser => extUser.Claims, extendedUser.Claims)
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
+                    Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.Claims, extendedUser.Claims)
                 );
             }
         }
 
         public async Task<IList<Claim>> GetClaimsAsync(TUser user)
         {
-            HashSet<Claim> claims = (await FindExtendedUserByIdAsync(((IUser)user).Id, p => p.Project(extUser => extUser.Claims))).Claims;
+            HashSet<Claim> claims = (await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, p => p.Project(extUser => extUser.Claims))).Claims;
 
             if (claims != null) return claims.ToList();
             else return new List<Claim>();
@@ -51,16 +51,16 @@ namespace Mongo.AspNet.Identity
 
         public async Task RemoveClaimAsync(TUser user, Claim claim)
         {
-            ExtendedUser extendedUser = await FindExtendedUserByIdAsync(((IUser)user).Id);
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, f => f.Project(u => u.Claims));
 
             if (extendedUser.Claims.Remove(claim))
             {
-                IMongoCollection<ExtendedUser> userCollection = GetCollection<ExtendedUser>(UserCollectionName);
+                IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
-                userCollection.UpdateOneAsync
+                await userCollection.UpdateOneAsync
                 (
-                    Builders<ExtendedUser>.Filter.Eq(extUser => extUser.Id, ((IUser)user).Id),
-                    Builders<ExtendedUser>.Update.Set(extUser => extUser.Claims, extendedUser.Claims)
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
+                    Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.Claims, extendedUser.Claims)
                 );
             }
         }
