@@ -33,14 +33,15 @@ namespace Mongo.AspNet.Identity
 
         private const string RequiredSettingFormat = "'{0}' setting is missing or empty in current application configuration";
 
-        public MongoUserStore(MongoClient client, Action<BsonClassMap<TUser>> genericUserMapper = null)
+        public MongoUserStore(MongoClient client)
         {
-            Contract.Assert(!string.IsNullOrEmpty(DatabaseName), string.Format(RequiredSettingFormat, "mongo:aspnetidentity:databaseName"));
+            Contract.Requires(client != null, "A client is mandatory");
+            Contract.Assert(!string.IsNullOrEmpty(DatabaseName), string.Format(RequiredSettingFormat, "aspNet:identity:mongo:databaseName"));
             _client = client;
         }
 
         private MongoClient Client { get { return _client; } }
-        public string DatabaseName { get { return ConfigurationManager.AppSettings["mongo:aspnetidentity:databaseName"]; } }
+        public string DatabaseName { get { return ConfigurationManager.AppSettings["aspNet:identity:mongo:databaseName"]; } }
         private static bool AlreadyConfigured { get; set; }
 
         private IMongoCollection<TDocument> GetCollection<TDocument>(string name)

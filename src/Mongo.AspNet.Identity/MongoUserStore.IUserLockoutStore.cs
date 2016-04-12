@@ -54,8 +54,8 @@ namespace Mongo.AspNet.Identity
 
             await userCollection.UpdateOneAsync
             (
-                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
-                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.AccessFailedCount, extendedUser.AccessFailedCount)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set("AccessFailedCount", extendedUser.AccessFailedCount)
             );
 
             return extendedUser.AccessFailedCount;
@@ -67,8 +67,8 @@ namespace Mongo.AspNet.Identity
 
             return userCollection.UpdateOneAsync
             (
-                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
-                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.AccessFailedCount, 0)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set("AccessFailedCount", 0)
             );
         }
 
@@ -79,7 +79,7 @@ namespace Mongo.AspNet.Identity
             return userCollection.UpdateOneAsync
             (
                 Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
-                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.LockoutEnabled, enabled)
+                Builders<ExtenderUser<TUserId>>.Update.Set("LockoutEnabled", enabled)
             );
         }
 
@@ -89,8 +89,8 @@ namespace Mongo.AspNet.Identity
 
             return userCollection.UpdateOneAsync
             (
-                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
-                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.LockoutEndDate, lockoutEnd)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set("LockoutEndDate", lockoutEnd)
             );
         }
     }

@@ -29,13 +29,13 @@ namespace Mongo.AspNet.Identity
             IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
             ExtenderUser<TUserId> userRoleHolder = await userCollection
-                                                    .Find(Builders<ExtenderUser<TUserId>>.Filter.Eq(holder => holder.Id, ((IIdentityUser<TUserId>)user).Id))
+                                                    .Find(Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id))
                                                     .SingleAsync();
             if (userRoleHolder.Logins.Add(login))
             {
                 await userCollection.UpdateOneAsync
                 (
-                    Builders<ExtenderUser<TUserId>>.Filter.Eq(holder => holder.Id,((IIdentityUser<TUserId>)user).Id),
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq("Id",((IIdentityUser<TUserId>)user).Id),
                     Builders<ExtenderUser<TUserId>>.Update.Set(holder => holder.Logins, userRoleHolder.Logins),
                     new UpdateOptions { IsUpsert = true }
                 );
@@ -64,7 +64,7 @@ namespace Mongo.AspNet.Identity
                 ((IIdentityUser<TUserId>)user).Id,
                 find =>
                 {
-                    find.Project(extUser => extUser.Logins);
+                    find.Project("Logins");
                 }
             );
 
@@ -80,7 +80,7 @@ namespace Mongo.AspNet.Identity
                 userId,
                 find =>
                 {
-                    find.Project(extUser => extUser.Logins);
+                    find.Project("Logins");
                 }
             );
 
@@ -90,8 +90,8 @@ namespace Mongo.AspNet.Identity
 
                 await userCollection.UpdateOneAsync
                 (
-                    Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, userId),
-                    Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.Logins, extendedUser.Logins)
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", userId),
+                    Builders<ExtenderUser<TUserId>>.Update.Set("Logins", extendedUser.Logins)
                 );
             }
         }

@@ -35,8 +35,8 @@ namespace Mongo.AspNet.Identity
 
                 await userCollection.UpdateOneAsync
                 (
-                    Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
-                    Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.Claims, extendedUser.Claims)
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
+                    Builders<ExtenderUser<TUserId>>.Update.Set("Claims", extendedUser.Claims)
                 );
             }
         }
@@ -59,8 +59,8 @@ namespace Mongo.AspNet.Identity
 
                 await userCollection.UpdateOneAsync
                 (
-                    Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
-                    Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.Claims, extendedUser.Claims)
+                    Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
+                    Builders<ExtenderUser<TUserId>>.Update.Set("Claims", extendedUser.Claims)
                 );
             }
         }

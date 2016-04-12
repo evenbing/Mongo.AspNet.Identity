@@ -21,19 +21,16 @@ namespace Mongo.AspNet.Identity
     using System;
     using System.Configuration;
     using System.Diagnostics.Contracts;
-    using System.Linq.Expressions;
     using System.Threading.Tasks;
 
     public abstract partial class MongoUserStore<TUserId, TUser> : IUserStore<TUser>
     {
-        private readonly Expression<Func<TUser, TUserId>> userIdPropertySelector = someUser => ((IIdentityUser<TUserId>)someUser).Id;
-
         public MongoUserStore()
         {
-            Contract.Requires(!string.IsNullOrEmpty(UserCollectionName), string.Format(RequiredSettingFormat, "mongo:aspnetidentity:users:collectionName"));
+            Contract.Requires(!string.IsNullOrEmpty(UserCollectionName), string.Format(RequiredSettingFormat, "aspNet:identity:mongo:users:collectionName"));
         }
 
-        public string UserCollectionName { get { return ConfigurationManager.AppSettings["mongo:aspnetidentity:users:collectionName"]; } }
+        public string UserCollectionName { get { return ConfigurationManager.AppSettings["aspNet:identity:mongo:users:collectionName"]; } }
 
         public Task CreateAsync(TUser user)
         {
@@ -46,14 +43,14 @@ namespace Mongo.AspNet.Identity
         {
             IMongoCollection<TUser> userCollection = GetCollection<TUser>(UserCollectionName);
 
-            return userCollection.DeleteOneAsync(Builders<TUser>.Filter.Eq(userIdPropertySelector, ((IIdentityUser<TUserId>)user).Id));
+            return userCollection.DeleteOneAsync(Builders<TUser>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id));
         }
 
         public Task<TUser> FindByIdAsync(string userId)
         {
             IMongoCollection<TUser> userCollection = GetCollection<TUser>(UserCollectionName);
 
-            return userCollection.Find(Builders<TUser>.Filter.Eq(userIdPropertySelector, ConvertUserIdFromString(userId)))
+            return userCollection.Find(Builders<TUser>.Filter.Eq("Id", ConvertUserIdFromString(userId)))
                         .SingleAsync();
         }
 
@@ -63,7 +60,7 @@ namespace Mongo.AspNet.Identity
 
             IFindFluent<ExtenderUser<TUserId>, ExtenderUser<TUserId>> findFluent = userCollection.Find
             (
-                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, userId)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", userId)
             );
 
             if (projection != null)
@@ -76,7 +73,7 @@ namespace Mongo.AspNet.Identity
         {
             IMongoCollection<TUser> userCollection = GetCollection<TUser>(UserCollectionName);
 
-            return userCollection.Find(Builders<TUser>.Filter.Eq(someUser => someUser.UserName, userName))
+            return userCollection.Find(Builders<TUser>.Filter.Eq("UserName", userName))
                                     .SingleOrDefaultAsync();
         }
 
@@ -86,7 +83,7 @@ namespace Mongo.AspNet.Identity
 
             return userCollection.ReplaceOneAsync
             (
-                Builders<TUser>.Filter.Eq(userIdPropertySelector, ((IIdentityUser<TUserId>)user).Id),
+                Builders<TUser>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
                 user
             );
         }

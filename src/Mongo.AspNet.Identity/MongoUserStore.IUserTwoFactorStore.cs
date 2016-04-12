@@ -24,7 +24,7 @@ namespace Mongo.AspNet.Identity
     {
         public async Task<bool> GetTwoFactorEnabledAsync(TUser user)
         {
-            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, p => p.Project(u => u.TwoFactorAuthenticationEnabled));
+            ExtenderUser<TUserId> extendedUser = await FindExtendedUserByIdAsync(((IIdentityUser<TUserId>)user).Id, p => p.Project("TwoFactorAuthenticationEnabled"));
 
             return extendedUser.TwoFactorAuthenticationEnabled;
         }
@@ -35,8 +35,8 @@ namespace Mongo.AspNet.Identity
 
             return userCollection.UpdateOneAsync
             (
-                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
-                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.TwoFactorAuthenticationEnabled, enabled)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set("TwoFactorAuthenticationEnabled", enabled)
             );
         }
     }

@@ -31,7 +31,7 @@ namespace Mongo.AspNet.Identity
         {
             IMongoCollection<ExtenderUser<TUserId>> userCollection = GetCollection<ExtenderUser<TUserId>>(UserCollectionName);
 
-            ExtenderUser<TUserId> extendedUser = await userCollection.Find(Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id))
+            ExtenderUser<TUserId> extendedUser = await userCollection.Find(Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id))
                                                     .SingleAsync();
 
             return extendedUser.PhoneNumberConfirmed;
@@ -43,8 +43,8 @@ namespace Mongo.AspNet.Identity
 
             return userCollection.UpdateOneAsync
             (
-                Builders<TUser>.Filter.Eq(this.userIdPropertySelector, ((IIdentityUser<TUserId>)user).Id),
-                Builders<TUser>.Update.Set(someUser => someUser.PhoneNumber, phoneNumber)
+                Builders<TUser>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
+                Builders<TUser>.Update.Set("PhoneNumber", phoneNumber)
             );
         }
 
@@ -54,8 +54,8 @@ namespace Mongo.AspNet.Identity
 
             return userCollection.UpdateOneAsync
             (
-                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
-                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.PhoneNumberConfirmed, confirmed)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set("PhoneNumberConfirmed", confirmed)
             );
         }
     }

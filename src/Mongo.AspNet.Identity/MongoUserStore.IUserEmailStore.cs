@@ -26,7 +26,7 @@ namespace Mongo.AspNet.Identity
         {
             IMongoCollection<TUser> userCollection = GetCollection<TUser>(UserCollectionName);
 
-            return userCollection.Find(Builders<TUser>.Filter.Eq(user => user.Email, email)).SingleOrDefaultAsync();
+            return userCollection.Find(Builders<TUser>.Filter.Eq("Email", email)).SingleOrDefaultAsync();
         }
 
         public Task<string> GetEmailAsync(TUser user)
@@ -54,8 +54,8 @@ namespace Mongo.AspNet.Identity
 
             return userCollection.UpdateOneAsync
             (
-                Builders<ExtenderUser<TUserId>>.Filter.Eq(extUser => extUser.Id, ((IIdentityUser<TUserId>)user).Id),
-                Builders<ExtenderUser<TUserId>>.Update.Set(extUser => extUser.EmailConfirmed, confirmed)
+                Builders<ExtenderUser<TUserId>>.Filter.Eq("Id", ((IIdentityUser<TUserId>)user).Id),
+                Builders<ExtenderUser<TUserId>>.Update.Set("EmailConfirmed", confirmed)
             );
         }
     }

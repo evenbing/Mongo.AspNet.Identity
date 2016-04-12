@@ -18,7 +18,7 @@
 
         public OAuthClientStore(MongoClient client)
         {
-            Contract.Requires(client != null, "ConnectionMultiplexer is mandatory");
+            Contract.Requires(client != null, "A client is mandatory");
 
             Contract.Assert(!string.IsNullOrEmpty(DatabaseName), "Either 'aspNet:identity:oauth:mongo:databaseName' application setting is missing or empty'");
             Contract.Assert(!string.IsNullOrEmpty(ClientCollectionName), "Either 'aspNet:identity:oauth:mongo:clientCollectionName' application setting is missing or empty'");
@@ -69,7 +69,7 @@
 
         public virtual Task<TClient> GetClientByIdAsync(string id)
         {
-            return ClientCollection.Find(client => client.Id == id).SingleAsync();
+            return ClientCollection.Find(Builders<TClient>.Filter.Eq("Id", id)).SingleAsync();
         }
 
         public virtual async Task<ImmutableHashSet<TClient>> GetAllClientsByOwnerUserNameAsync(string ownerUserName)
